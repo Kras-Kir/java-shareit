@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.error.ConflictException;
 import ru.practicum.shareit.error.NotFoundException;
 import ru.practicum.shareit.error.ValidationException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,66 +17,62 @@ public class UserServiceImpl implements UserService {
     private Long idCounter = 1L;
 
     @Override
-    public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+    public List<UserDto> getAllUsers() {
+        List<UserDto> result = new ArrayList<>();
+        for (User user : users.values()) {
+            result.add(UserMapper.toUserDto(user));
+        }
+        return result;
     }
 
     @Override
-    public User getUserById(Long userId) {
+    public UserDto getUserById(Long userId) {
         if (!users.containsKey(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
-        return users.get(userId);
+        return UserMapper.toUserDto(users.get(userId));
     }
 
     @Override
-    public User createUser(User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            throw new ValidationException("Некорректный формат email");
-        }
+    public UserDto createUser(UserDto userDto) {
 
-        // Проверяем, существует ли уже пользователь с таким email
-        if (emailToUserMap.containsKey(user.getEmail())) {
-            throw new ConflictException("Пользователь с email " + user.getEmail() + " уже существует");
-        }
+        checkEmailUniqueness(userDto.getEmail());
 
+        User user = UserMapper.toUser(userDto);
         user.setId(idCounter++);
         users.put(user.getId(), user);
-        emailToUserMap.put(user.getEmail(), user); // Сохраняем пользователя
-        return user;
+        emailToUserMap.put(user.getEmail(), user);
+        return UserMapper.toUserDto(user);
     }
 
     @Override
-    public User updateUser(Long userId, User userUpdates) {
+    public UserDto updateUser(Long userId, UserDto userDto) {
         if (!users.containsKey(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
 
         User existingUser = users.get(userId);
 
-        if (userUpdates.getEmail() != null) {
-            String newEmail = userUpdates.getEmail();
-            if (newEmail.isBlank() || !newEmail.contains("@")) {
-                throw new ValidationException("Некорректный формат email");
-            }
+        if (userDto.getEmail() != null) {
+            String newEmail = userDto.getEmail();
+            String currentEmail = existingUser.getEmail();
 
-            // Проверяем, не занят ли новый email другим пользователем
-            if (emailToUserMap.containsKey(newEmail) &&
-                    !emailToUserMap.get(newEmail).getId().equals(userId)) {
-                throw new ConflictException("Email " + newEmail + " уже используется другим пользователем");
-            }
+            validateUserEmail(newEmail);
 
-            // Обновляем email в мапе
-            emailToUserMap.remove(existingUser.getEmail());
-            existingUser.setEmail(newEmail);
-            emailToUserMap.put(newEmail, existingUser);
+            if (!newEmail.equals(currentEmail)) {
+                checkEmailUniqueness(newEmail);
+
+                emailToUserMap.remove(currentEmail);
+                existingUser.setEmail(newEmail);
+                emailToUserMap.put(newEmail, existingUser);
+            }
         }
 
-        if (userUpdates.getName() != null) {
-            existingUser.setName(userUpdates.getName());
+        if (userDto.getName() != null && !userDto.getName().isBlank()) {
+            existingUser.setName(userDto.getName());
         }
 
-        return existingUser;
+        return UserMapper.toUserDto(existingUser);
     }
 
     @Override
@@ -84,7 +81,19 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
         User user = users.get(userId);
-        emailToUserMap.remove(user.getEmail()); // Удаляем email из мапы
+        emailToUserMap.remove(user.getEmail());
         users.remove(userId);
+    }
+
+    private void checkEmailUniqueness(String email) {
+        if (emailToUserMap.containsKey(email)) {
+            throw new ConflictException("Пользователь с email " + email + " уже существует");
+        }
+    }
+
+    private void validateUserEmail(String email) {
+        if (email == null || email.isBlank() || !email.contains("@")) {
+            throw new ValidationException("Некорректный формат email");
+        }
     }
 }

@@ -2,7 +2,13 @@ package ru.practicum.shareit.item;
 
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.error.ForbiddenException;
+import ru.practicum.shareit.error.NotFoundException;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.UserDto;
+import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.UserService;
 
 import java.util.ArrayList;
@@ -21,54 +27,74 @@ public class ItemServiceImpl implements ItemService {
         this.userService = userService;
     }
 
+
     @Override
-    public Item createItem(Long userId, Item item) {
+    public ItemDto createItem(Long userId, ItemDto itemDto) {
+        UserDto userDto = userService.getUserById(userId);
+        User owner = UserMapper.toUser(userDto);
+
+        Item item = ItemMapper.toItem(itemDto);
         item.setId(idCounter++);
-        item.setOwner(userService.getUserById(userId));
+        item.setOwner(owner);
         items.put(item.getId(), item);
-        return item;
+
+        return ItemMapper.toItemDto(item);
     }
 
     @Override
-    public Item updateItem(Long userId, Long itemId, Item item) {
+    public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
         Item existingItem = items.get(itemId);
         if (!existingItem.getOwner().getId().equals(userId)) {
             throw new ForbiddenException("Пользователь " + userId + " не является владельцем предмета");
         }
 
-        if (item.getName() != null) {
-            existingItem.setName(item.getName());
+        if (itemDto.getName() != null && !itemDto.getName().trim().isEmpty()) {
+            existingItem.setName(itemDto.getName().trim());
         }
-        if (item.getDescription() != null) {
-            existingItem.setDescription(item.getDescription());
+
+        if (itemDto.getDescription() != null && !itemDto.getDescription().trim().isEmpty()) {
+            existingItem.setDescription(itemDto.getDescription().trim());
         }
-        if (item.getAvailable() != null) {
-            existingItem.setAvailable(item.getAvailable());
+
+        if (itemDto.getAvailable() != null) {
+            existingItem.setAvailable(itemDto.getAvailable());
         }
-        return existingItem;
+        return ItemMapper.toItemDto(existingItem);
     }
 
     @Override
-    public Item getItemById(Long itemId) {
-        return items.get(itemId);
+    public ItemDto getItemById(Long itemId) {
+        Item item = items.get(itemId);
+        if (item == null) {
+            throw new NotFoundException("Предмет с ID " + itemId + " не найден");
+        }
+        return ItemMapper.toItemDto(item);
     }
 
     @Override
-    public List<Item> getAllItemsByOwner(Long userId) {
+    public List<ItemDto> getAllItemsByOwner(Long userId) {
+        if (userService.getUserById(userId) == null) {
+            throw new NotFoundException("Пользователь с ID " + userId + " не найден");
+        }
         return items.values().stream()
                 .filter(item -> item.getOwner().getId().equals(userId))
+                .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Item> searchItems(String text) {
-        if (text.isBlank()) {
+    public List<ItemDto> searchItems(String text) {
+        if (text == null || text.isBlank()) {
             return new ArrayList<>();
         }
+
+        String lowerCaseText = text.toLowerCase();
+
         return items.values().stream()
                 .filter(item -> item.getAvailable() &&
-                        (item.getName().toLowerCase().contains(text.toLowerCase()) ||
-                                item.getDescription().toLowerCase().contains(text.toLowerCase())))
+                        (item.getName().toLowerCase().contains(lowerCaseText) ||
+                                item.getDescription().toLowerCase().contains(lowerCaseText)))
+                .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
 }
