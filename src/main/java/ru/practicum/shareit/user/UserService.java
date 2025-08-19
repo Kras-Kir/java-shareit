@@ -12,4 +12,9 @@ public interface UserService {
     UserDto updateUser(Long userId, UserDto user);
 
     void deleteUser(Long userId);
+
+    User getUserEntityById(Long userId);
+
+    boolean existsById(Long userId);
+
 }

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 
 import java.util.List;
 
@@ -44,6 +45,7 @@ public class ItemController {
         log.info("Получен запрос на получение всех вещей владельца с ID {}", userId);
         return itemService.getAllItemsByOwner(userId);
     }
+
 
     @GetMapping("/search")
     public List<ItemDto> searchItems(@RequestParam String text) {
