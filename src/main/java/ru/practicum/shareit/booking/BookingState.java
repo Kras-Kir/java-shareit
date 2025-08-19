@@ -1,5 +1,7 @@
 package ru.practicum.shareit.booking;
 
+import ru.practicum.shareit.error.ValidationException;
+
 public enum BookingState {
     ALL,
     CURRENT,
@@ -12,7 +14,7 @@ public enum BookingState {
         try {
             return BookingState.valueOf(state.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Unknown state: " + state);
+            throw new ValidationException("Unknown state: " + state);
         }
     }
 }

@@ -19,4 +19,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     boolean existsApprovedBookingForUser(@Param("itemId") Long itemId,
                                          @Param("authorId") Long authorId,
                                          @Param("now") LocalDateTime now);
+
+    List<Comment> findByItemIdInOrderByCreatedDesc(List<Long> itemIds);
 }

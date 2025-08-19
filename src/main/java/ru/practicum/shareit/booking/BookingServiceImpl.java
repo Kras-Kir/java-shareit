@@ -32,11 +32,9 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingResponseDto createBooking(Long userId, BookingRequestDto bookingDto) {
-        User booker = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        User booker = getUserByIdOrThrow(userId);
 
-        Item item = itemRepository.findById(bookingDto.getItemId())
-                .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
+        Item item = getItemByIdOrThrow(bookingDto.getItemId());
 
         if (!item.getAvailable()) {
             throw new ValidationException("Вещь недоступна для бронирования");
@@ -56,8 +54,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingResponseDto approveBooking(Long ownerId, Long bookingId, boolean approved) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
+        Booking booking = getBookingByIdOrThrow(bookingId);
 
         if (!booking.getItem().getOwner().getId().equals(ownerId)) {
             throw new ForbiddenException("Только владелец может подтверждать бронирование");
@@ -75,8 +72,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingResponseDto getBookingById(Long userId, Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
+        Booking booking = getBookingByIdOrThrow(bookingId);
 
         if (!booking.getBooker().getId().equals(userId) &&
                 !booking.getItem().getOwner().getId().equals(userId)) {
@@ -94,7 +90,7 @@ public class BookingServiceImpl implements BookingService {
         PageRequest pageRequest = createPageRequest(from, size);
         LocalDateTime now = LocalDateTime.now();
 
-        BookingState bookingState = validateState(state);
+        BookingState bookingState = BookingState.from(state);
         Page<Booking> bookingsPage;
 
         switch (bookingState) {
@@ -138,7 +134,7 @@ public class BookingServiceImpl implements BookingService {
 
         Page<Booking> bookingsPage;
 
-        switch (validateState(state)) {
+        switch (BookingState.from(state)) {
             case CURRENT:
                 bookingsPage = bookingRepository.findByItemOwnerIdAndStartBeforeAndEndAfter(
                         ownerId, now, now, pageRequest);
@@ -173,11 +169,19 @@ public class BookingServiceImpl implements BookingService {
         return PageRequest.of(from / size, size, Sort.by("start").descending());
     }
 
-    private BookingState validateState(String state) {
-        try {
-            return BookingState.from(state);
-        } catch (IllegalArgumentException e) {
-            throw new ValidationException("Unknown state: " + state);
-        }
+
+    private User getUserByIdOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
+    }
+
+    private Item getItemByIdOrThrow(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Вещь с ID " + itemId + " не найдена"));
+    }
+
+    private Booking getBookingByIdOrThrow(Long bookingId) {
+        return bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException("Бронирование с ID " + bookingId + " не найдено"));
     }
 }
