@@ -1,16 +1,12 @@
 package ru.practicum.shareit.user;
 
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.error.ConflictException;
 import ru.practicum.shareit.error.NotFoundException;
-import ru.practicum.shareit.error.ValidationException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -91,15 +87,5 @@ public class UserServiceImpl implements UserService {
         return userRepository.existsById(userId);
     }
 
-    /*private void checkEmailUniqueness(String email) {
-        if (emailToUserMap.containsKey(email)) {
-            throw new ConflictException("Пользователь с email " + email + " уже существует");
-        }
-    }
 
-    private void validateUserEmail(String email) {
-        if (email == null || email.isBlank() || !email.contains("@")) {
-            throw new ValidationException("Некорректный формат email");
-        }
-    }*/
 }
