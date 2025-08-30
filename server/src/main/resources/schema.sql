@@ -44,6 +44,3 @@ CREATE TABLE IF NOT EXISTS requests (
     created TIMESTAMP WITHOUT TIME ZONE NOT NULL
 );
 
-ALTER TABLE items DROP CONSTRAINT IF EXISTS fk_items_to_requests,
- ADD CONSTRAINT  fk_items_to_requests
-FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE SET NULL;
