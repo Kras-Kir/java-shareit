@@ -17,6 +17,7 @@ import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.Request;
+import ru.practicum.shareit.request.RequestRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserService;
 
@@ -63,6 +64,13 @@ public class ItemServiceImpl implements ItemService {
             throw new ForbiddenException("Редактирование запрещено: пользователь не является владельцем");
         }
 
+        if (itemDto.getName() != null && !itemDto.getName().isBlank()) {
+            existingItem.setName(itemDto.getName().trim());
+        }
+
+        if (itemDto.getDescription() != null && !itemDto.getDescription().isBlank()) {
+            existingItem.setDescription(itemDto.getDescription().trim());
+        }
 
         if (itemDto.getAvailable() != null) {
             existingItem.setAvailable(itemDto.getAvailable());
@@ -74,7 +82,9 @@ public class ItemServiceImpl implements ItemService {
             existingItem.setRequest(request);
         }
 
-        return ItemMapper.toItemDto(existingItem);
+        Item updatedItem = itemRepository.save(existingItem);
+
+        return ItemMapper.toItemDto(updatedItem);
     }
 
 
