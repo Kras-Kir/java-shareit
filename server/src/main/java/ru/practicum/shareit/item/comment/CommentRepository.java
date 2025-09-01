@@ -14,7 +14,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("SELECT COUNT(b) > 0 FROM Booking b " +
             "WHERE b.item.id = :itemId " +
             "AND b.booker.id = :authorId " +
-            "AND b.status = 'APPROVED' " +
+            "AND b.status = ru.practicum.shareit.booking.BookingStatus.APPROVED " +
             "AND b.end < :now")
     boolean existsApprovedBookingForUser(@Param("itemId") Long itemId,
                                          @Param("authorId") Long authorId,
