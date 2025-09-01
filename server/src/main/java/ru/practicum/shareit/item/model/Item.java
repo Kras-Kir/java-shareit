@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.request.Request;
 import ru.practicum.shareit.user.User;
 
 import java.util.List;

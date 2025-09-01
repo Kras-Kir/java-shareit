@@ -5,7 +5,7 @@ import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.item.comment.Comment;
 import ru.practicum.shareit.item.comment.CommentDto;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.Request;
+import ru.practicum.shareit.request.Request;
 import ru.practicum.shareit.user.User;
 
 import java.time.LocalDateTime;
